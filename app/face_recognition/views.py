@@ -1,3 +1,5 @@
+from photo_load.models import Photo
+from photo_load.serializers import PhotoSerializer
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -9,8 +11,6 @@ from rest_framework.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from app.photo_load.models import Photo
-from app.photo_load.serializers import PhotoSerializer
 from .models import Face, Avatar
 from .serializers import FaceSerializer, AvatarSerializer
 

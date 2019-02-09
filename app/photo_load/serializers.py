@@ -1,43 +1,18 @@
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Photo, Storage
-
-User = get_user_model()
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', User.USERNAME_FIELD)
-
-
-class StorageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Storage
-        fields = ('id', 'original',)
-
-    def create(self, validated_data):
-        storage, created = \
-            Storage.objects.update_or_create(original=validated_data[0])
-        return storage
+from .models import Photo, PhotoInfo
 
 
 class PhotoSerializer(serializers.ModelSerializer):
-    width = serializers.IntegerField(required=False)
-    height = serializers.IntegerField(required=False)
-    storage = StorageSerializer(required=False)
 
     class Meta:
         model = Photo
-        fields = ('owner', 'storage', 'width', 'height')
+        fields = ('id', 'original', 'owner')
 
     def create(self, validated_data):
-        storage_data = validated_data.pop('storage')
-        storage = StorageSerializer.create(StorageSerializer(),
-                                           validated_data=storage_data)
-
-        photo, created = \
-            Photo.objects.update_or_create(owner=validated_data.pop('user')[0],
-                                           storage=storage)
+        original = validated_data['original']
+        owner = validated_data['user']
+        photo, _ = Photo.objects.update_or_create(original=original,
+                                                  owner=owner)
+        PhotoInfo.objects.update_or_create(photo=photo)
         return photo
