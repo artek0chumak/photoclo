@@ -42,8 +42,8 @@ def get_new_bounding_boxes(photo_id, faces):
     h = photo.photoinfo.height
     w = photo.photoinfo.width
 
-    min_side = min(h, w)
-    coef = 1 if min_side < sizes['z'] else min_side / sizes['z']
+    max_side = max(h, w)
+    coef = 1 if max_side < sizes['z'] else max_side / sizes['z']
 
     for i in range(len(faces)):
         faces[i]['bounding_box'] = [int(j * coef) for j in

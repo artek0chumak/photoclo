@@ -77,10 +77,10 @@ class Photo(models.Model):
             if size == 'o':
                 shape = image.size
             else:
-                min_side = min(image.size)
-                if min_side < sizes[size]:
-                    min_side = sizes[size]
-                proc = sizes[size] / min_side
+                max_side = max(image.size)
+                if max_side < sizes[size]:
+                    max_side = sizes[size]
+                proc = sizes[size] / max_side
                 shape = (int(image.width * proc), int(image.height * proc))
             image.resize(*shape)
             image.save(io_stream)
