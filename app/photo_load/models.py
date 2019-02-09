@@ -1,8 +1,8 @@
+import hashlib
 import subprocess
 import sys
 from datetime import datetime
 from io import BytesIO
-from uuid import uuid4
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -14,15 +14,15 @@ sizes = {'o': 'max', 'z': 1080}
 
 
 def get_upload_path(instance, filename):
-    return instance.get_upload_path(filename)
+    return instance.get_upload_path(filename, '')
 
 
 def get_upload_path_size_o(instance, filename):
-    return instance.get_upload_path("o_{0}".format(filename))
+    return instance.get_upload_path(filename, 'o')
 
 
 def get_upload_path_size_z(instance, filename):
-    return instance.get_upload_path("z_{0}".format(filename))
+    return instance.get_upload_path(filename, 'z')
 
 
 # def get_upload_path_size_y(instance, filename):
@@ -41,7 +41,8 @@ def get_upload_path_size_z(instance, filename):
 #     return instance.get_upload_path("s_{0}".format(filename))
 
 
-class Storage(models.Model):
+class Photo(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     original = models.FileField(upload_to=get_upload_path)
     o_size = models.ImageField(upload_to=get_upload_path_size_o)
     z_size = models.ImageField(upload_to=get_upload_path_size_z)
@@ -50,12 +51,8 @@ class Storage(models.Model):
     # m_size = models.ImageField(upload_to=get_upload_path_size_m)
     # s_size = models.ImageField(upload_to=get_upload_path_size_s)
 
-    def __init__(self, *args, **kwargs):
-        super(Storage, self).__init__(*args, **kwargs)
-        self.salt = uuid4().hex
-
-    def get_upload_path(self, filename):
-        return '{0}/{1}'.format(self.salt, filename)
+    def get_upload_path(self, filename, size):
+        return '{0}/{1}_{2}'.format(hashlib.sha256(self.owner), size, filename)
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -66,7 +63,7 @@ class Storage(models.Model):
             # self.m_size = self.compress('m')
             # self.s_size = self.compress('s')
 
-        super(Storage, self).save(*args, **kwargs)
+        super(Photo, self).save(*args, **kwargs)
 
     def compress(self, size):
         with Image(blob=self.original.file) as image:
@@ -92,10 +89,9 @@ class Storage(models.Model):
             return sized
 
 
-class Photo(models.Model):
-    storage = models.OneToOneField(Storage, on_delete=models.CASCADE,
-                                   primary_key=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+class PhotoInfo(models.Model):
+    photo = models.OneToOneField(Photo, on_delete=models.CASCADE,
+                                 primary_key=True)
     time_created = models.DateTimeField()
     width = models.IntegerField()
     height = models.IntegerField()
@@ -103,16 +99,16 @@ class Photo(models.Model):
 
     def save(self, *args, **kwargs):
         for size_type in sizes:
-            size = getattr(self.storage, '{0}_size'.format(size_type))
+            size = getattr(self.photo, '{0}_size'.format(size_type))
             subprocess.run(['exiftool', '-TagsFromFile',
-                            self.storage.original.path, size.path],
+                            self.photo.original.path, size.path],
                            stdout=subprocess.PIPE)
 
-        with Image(blob=self.storage.o_size.file) as image:
+        with Image(blob=self.photo.o_size.file) as image:
             self.width, self.height = image.size
 
         result = subprocess.run(['exiftool', '-dateTimeOriginal',
-                                self.storage.original.path],
+                                self.photo.original.path],
                                 stdout=subprocess.PIPE)
 
         result = result.stdout.decode('utf-8')
@@ -123,4 +119,4 @@ class Photo(models.Model):
             dt = dt.strip()
             self.time_created = datetime.strptime(dt, '%Y:%m:%d %H:%M:%S')
 
-        super(Photo, self).save(*args, **kwargs)
+        super(PhotoInfo, self).save(*args, **kwargs)
