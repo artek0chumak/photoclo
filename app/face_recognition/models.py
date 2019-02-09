@@ -1,7 +1,7 @@
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
-from app.photo_load.models import Photo
+from photo_load.models import Photo
 
 
 class Avatar(models.Model):

@@ -22,9 +22,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'app.web',
-    'app.photo_load',
-    'app.face_recognition',
+    'web',
+    'photo_load',
+    'face_recognition',
 ]
 
 MIDDLEWARE = [

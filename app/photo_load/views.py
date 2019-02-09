@@ -1,3 +1,4 @@
+from face_recognition.async_fd_runner import get_faces
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,8 +9,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from app.face_recognition.async_fd_runner import get_faces
-from .models import Photo, Storage
+from .models import Photo, PhotoInfo
 from .serializers import PhotoSerializer
 
 
@@ -20,27 +20,25 @@ class PhotoView(viewsets.GenericViewSet):
         size = request.query_params['size']
         user = request.user
 
-        photos = Photo.objects.filter(owner=user).order_by('-time_created')
+        photos = PhotoInfo.objects.filter(photo__owner=user)\
+            .order_by('-time_created').values('photo')
+
         if len(photos) < offset:
             return Response({'error': "Offset is too large"},
                             status=HTTP_400_BAD_REQUEST)
+        photos = Photo.objects.filter(id__in=photos)[offset:offset + limit]
 
-        photos = photos[offset:offset + limit]
+        client_photos = [{'url': getattr(photo, '{0}_size'.format(size)).url,
+                          'height': photo.photoinfo.height,
+                          'width': photo.photoinfo.width,
+                          'id': photo.id}
+                         for photo in photos]
 
-        size_field = Storage._meta.get_field('{0}_size'.format(size))
-        client_photo = [{'url': size_field.value_from_object(
-                                Storage.objects.filter(photo=photo)[0]).url,
-                         'height': photo.height, 'width': photo.width,
-                         'id': photo.storage.id}
-                        for photo in photos]
-
-        count = len(client_photo)
-        return Response({'count': count, 'photos': client_photo},
+        return Response({'count': len(client_photos), 'photos': client_photos},
                         status=HTTP_200_OK)
 
     def retrieve(self, request, pk):
-        photos = Photo.objects.filter(owner=request.user)
-        photo = Storage.objects.filter(photo__in=photos).filter(photo=pk)
+        photo = Photo.objects.filter(owner=request.user).filter(id=pk)
 
         if len(photo) == 0:
             return Response({}, status=HTTP_404_NOT_FOUND)
@@ -48,8 +46,7 @@ class PhotoView(viewsets.GenericViewSet):
         return Response({'url': photo[0].o_size.url}, status=HTTP_200_OK)
 
     def destroy(self, request, pk):
-        photos = Photo.objects.filter(owner=request.user)
-        photo = Storage.objects.filter(photo__in=photos).filter(photo=pk)
+        photo = Photo.objects.filter(owner=request.user).filter(id=pk)
 
         if len(photo) == 0:
             return Response({}, status=HTTP_404_NOT_FOUND)
@@ -61,7 +58,7 @@ class PhotoView(viewsets.GenericViewSet):
         data = request.data
         status_list = []
         for item in request.data.getlist('items[]'):
-            data['storage'] = item
+            data['original'] = item
             data['owner'] = request.user.id
             data['user'] = request.user
 
@@ -69,7 +66,7 @@ class PhotoView(viewsets.GenericViewSet):
 
             if photo_serializer.is_valid():
                 photo = photo_serializer.create(validated_data=data)
-                get_faces.apply_async((photo.storage_id, request.user.id),
+                get_faces.apply_async((photo.id, request.user.id),
                                       countdown=2)
                 status_list.append('Success')
             else:
@@ -78,10 +75,10 @@ class PhotoView(viewsets.GenericViewSet):
 
     @action(detail=True, methods=['GET'])
     def download(self, request, pk=None):
-        photos = Photo.objects.filter(owner=request.user)
-        photo = Storage.objects.filter(photo__in=photos).filter(photo=pk)
+        photo = Photo.objects.filter(owner=request.user).filter(id=pk)
 
         if len(photo) == 0:
             return Response({}, status=HTTP_404_NOT_FOUND)
+
         return Response({'url': photo[0].original.url}, status=HTTP_200_OK)
 

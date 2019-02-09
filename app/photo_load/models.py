@@ -50,9 +50,12 @@ class Photo(models.Model):
     # x_size = models.ImageField(upload_to=get_upload_path_size_x)
     # m_size = models.ImageField(upload_to=get_upload_path_size_m)
     # s_size = models.ImageField(upload_to=get_upload_path_size_s)
+    checked = models.NullBooleanField()
 
     def get_upload_path(self, filename, size):
-        return '{0}/{1}_{2}'.format(hashlib.sha256(self.owner), size, filename)
+        return '{0}/{1}_{2}'.format(
+            hashlib.sha256(self.owner.username.encode('utf-8')).hexdigest(),
+            size, filename)
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -95,12 +98,11 @@ class PhotoInfo(models.Model):
     time_created = models.DateTimeField()
     width = models.IntegerField()
     height = models.IntegerField()
-    checked = models.NullBooleanField()
 
     def save(self, *args, **kwargs):
         for size_type in sizes:
             size = getattr(self.photo, '{0}_size'.format(size_type))
-            subprocess.run(['exiftool', '-TagsFromFile',
+            subprocess.run(['exiftool', "-overwrite_original", '-TagsFromFile',
                             self.photo.original.path, size.path],
                            stdout=subprocess.PIPE)
 
