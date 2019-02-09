@@ -67,11 +67,11 @@
         * HTTP\_CODE: 500 - STATUS: error INTERNAL\_SERVER\_ERROR, error in creating avatar.
         * Example of request: `{ "face_id": 1, "name": 'Mother'}`
         * Example of return: `{ "id": 4, "name": 'Mother'}`, `id` - avatar id, `name` - avatar new name.
-* /api/avatars/\<id\>/ - create or update avatars. \<id\> - avatar id.
+* /api/avatars/\<id\>/ - update avatars. \<id\> - avatar id.
     * PATCH: new name
         * HTTP\_CODE: 200 - STATUS: OK, avatar name was changed
         * HTTP\_CODE: 404 -  STATUS: error NOT\_FOUND, avatar with this id wasn't found.
-        * Example of request: `{ "new_name": 'Father'}}`
+        * Example of request: `{ "new_name": 'Father', "face": 3}}`
         * Example of return: `{"updated_avatar": {"id": 5, "name": 'Father'}}`, `id` - avatar id, `name` - avatar new name.
 * /api/avatars/\<id\>/photos/ - return list of photos, \<id\> - avatar id.
     * GET: nothing
