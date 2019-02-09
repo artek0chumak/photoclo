@@ -57,7 +57,7 @@ class PhotoView(viewsets.GenericViewSet):
     def create(self, request, pk=None):
         data = request.data
         status_list = []
-        for item in request.data.getlist('items[]'):
+        for item in request.data.getlist('images[]'):
             data['original'] = item
             data['owner'] = request.user.id
             data['user'] = request.user
