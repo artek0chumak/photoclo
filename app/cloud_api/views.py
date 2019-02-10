@@ -45,7 +45,7 @@ class TokenView(ViewSet):
 
         basic = base64.b64encode(
             '{0}:{1}'.format(ya_disk_client['client-id'],
-                             ya_disk_client['client-secret']))
+                             ya_disk_client['client-secret']).encode('ascii'))
         r = requests.post('https://oauth.yandex.ru/token',
                           {'grant_type': 'authorization_code',
                            'code': code},
