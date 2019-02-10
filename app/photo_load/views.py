@@ -105,7 +105,6 @@ class PhotoView(viewsets.GenericViewSet):
                 upload_file.apply_async((photo.id,), countdown=5)
                 status_list.append('Success')
             else:
-                print(photo_serializer.errors)
                 status_list.append('Fail')
         return Response({'status': status_list}, HTTP_201_CREATED)
 
