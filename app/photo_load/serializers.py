@@ -16,7 +16,8 @@ class PhotoSerializer(serializers.ModelSerializer):
         owner = User.objects.filter(id=validated_data['owner']).first()
         data = validated_data
         photo = \
-            Photo.objects.create(owner=owner, temp_original=data['temp_original'],
+            Photo.objects.create(owner=owner,
+                                 temp_original=data['temp_original'],
                                  cloud_original=data['cloud_original'],
                                  filename=data['filename'])
         photo.save()

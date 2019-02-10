@@ -70,8 +70,6 @@ class PhotoView(viewsets.GenericViewSet):
             filename = item.name
             if not os.path.exists(path_dir):
                 os.makedirs(path_dir,)
-            path_temp_file = os.path.join(path_dir, filename)
-            cloud_path_file = os.path.join('photoclo', filename)
 
             if len(Photo.objects.filter(
                     cloud_original=os.path.join('photoclo', item.name))) > 0:
@@ -85,6 +83,9 @@ class PhotoView(viewsets.GenericViewSet):
                     filename_ = '.'.join(filename.split('.')[:-1]) + salt + ext
 
                 filename = filename_
+
+            path_temp_file = os.path.join(path_dir, filename)
+            cloud_path_file = os.path.join('photoclo', filename)
 
             with open(path_temp_file, 'wb') as file:
                 item.seek(0)
