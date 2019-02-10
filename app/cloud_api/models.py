@@ -25,3 +25,8 @@ class StatusCode(models.Model):
         os.remove(self.temp_path)
         return super(StatusCode, self).delete(using=using,
                                               keep_parents=keep_parents)
+
+
+class TempState(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    state = models.CharField(max_length=200)

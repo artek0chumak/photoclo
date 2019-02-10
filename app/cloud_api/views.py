@@ -1,9 +1,12 @@
 import os
+from uuid import uuid4
 
 import requests
 from django.conf import settings
-from rest_framework.decorators import action
+from django.shortcuts import redirect
+from rest_framework.decorators import action, permission_classes
 from rest_framework.exceptions import UnsupportedMediaType
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
@@ -16,7 +19,7 @@ from rest_framework.viewsets import ViewSet
 from yaml import load
 
 from .async_upload_file import upload_file
-from .models import YAtokens, StatusCode
+from .models import YAtokens, StatusCode, TempState
 from .serializers import StatusCodeSerializer
 
 with open(os.path.join(settings.BASE_DIR, 'configs', 'ya_disk_config.yaml'))\
@@ -30,35 +33,48 @@ class TokenView(ViewSet):
         tokens = YAtokens.objects.filter(user=request.user)
         if len(tokens) > 0:
             return Response(status=HTTP_200_OK)
+        temp_states = TempState.objects.filter(user=request.user)
+        if len(temp_states) > 0:
+            state = temp_states.first().state
+        else:
+            state = uuid4().hex
+            TempState.objects.create(user=request.user, state=state).save()
+
         url = 'https://oauth.yandex.ru/authorize?response_type=code' \
-              '&client_id={0}'.format(ya_disk_client['client-id'])
+              '&client_id={0}&state={1}'.format(ya_disk_client['client-id'],
+                                                state)
         return Response({'url': url}, status=HTTP_200_OK)
 
+    @permission_classes((AllowAny,))
     @action(methods=['GET'], detail=False, url_path='token')
     def get_token(self, request, pk=None):
         try:
             code = request.query_params['code']
-        except UnsupportedMediaType as error:
+            state = request.query_params['state']
+        except UnsupportedMediaType as e:
             error = request.query_params['error']
             error_description = request.query_params['error_description']
             return Response({'error': error, 'error_description':
                              error_description}, status=HTTP_400_BAD_REQUEST)
             # Not sure about HTTP code for this request.
 
+        temp_state = TempState.objects.filter(state=state).first()
+        user = temp_state
+        temp_state.delete()
+
         r = requests.post('https://oauth.yandex.ru/token',
-                          {'grant_type': 'authorization_code',
-                           'code': code,
+                          {'grant_type': 'authorization_code', 'code': code,
                            'client_id': ya_disk_client['client-id'],
                            'client_secret': ya_disk_client['client-secret']})
 
         data = r.json()
         if data.get('token', None) is None:
             Response(data, status=HTTP_400_BAD_REQUEST)
-        user_token = YAtokens.objects.create(user=request.user,
+        user_token = YAtokens.objects.create(user=user,
                                              token=data['access_token'],
                                              expires_in=data['expires_in'])
         user_token.save()
-        return Response({}, status=HTTP_201_CREATED)
+        return redirect('')
 
 
 class StatusCodeView(ViewSet):
