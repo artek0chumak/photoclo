@@ -10,7 +10,7 @@ from django.db import models
 from wand.image import Image
 
 # sizes = {'o': 'max', 'z': 1080, 'y': 807, 'x': 604, 'm': 130, 's': 100}
-sizes = {'o': 'max', 'z': 1080}
+sizes = {'z': 1080}
 
 
 def get_upload_path(instance, filename):
@@ -43,7 +43,9 @@ def get_upload_path_size_z(instance, filename):
 
 class Photo(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    original = models.FileField(upload_to=get_upload_path)
+    temp_original = models.TextField(null=True)
+    cloud_original = models.TextField()
+    filename = models.TextField()
     o_size = models.ImageField(upload_to=get_upload_path_size_o)
     z_size = models.ImageField(upload_to=get_upload_path_size_z)
     # y_size = models.ImageField(upload_to=get_upload_path_size_y)
@@ -53,26 +55,37 @@ class Photo(models.Model):
     checked = models.NullBooleanField()
 
     def get_upload_path(self, filename, size):
-        return '{0}/{1}_{2}'.format(
-            hashlib.sha256(self.owner.username.encode('utf-8')).hexdigest(),
-            size, filename)
+        temp = hashlib.sha256(self.owner.username.encode('utf-8'))
+        return '{0}/{1}_{2}'.format(temp.hexdigest(), size, filename)
 
     def save(self, *args, **kwargs):
-        if not self.id:
-            self.o_size = self.compress('o')
-            self.z_size = self.compress('z')
-            # self.y_size = self.compress('y')
-            # self.x_size = self.compress('x')
-            # self.m_size = self.compress('m')
-            # self.s_size = self.compress('s')
-
-        super(Photo, self).save(*args, **kwargs)
-
-    def compress(self, size):
-        with Image(blob=self.original.file) as image:
+        with Image(filename=self.temp_original) as image:
             image.format = 'jpeg'
             image.compression_quality = 90
-            file_name = ''.join(self.original.name.split('.')[:-1])
+
+            name_no_ext = ''.join(self.filename.split('.')[:-1])
+            shape = image.size
+            io_stream = BytesIO()
+            image.resize(*shape)
+            image.save(io_stream)
+            io_stream.seek(0)
+            temp = InMemoryUploadedFile(io_stream, 'ImageField',
+                                        "{0}.jpeg".format(name_no_ext),
+                                        'image/jpeg',
+                                        sys.getsizeof(io_stream), None)
+
+            self.o_size = temp
+
+        for size in sizes:
+            setattr(self, '{0}_size'.format(size), self.compress(size))
+
+        return super(Photo, self).save(*args, **kwargs)
+
+    def compress(self, size):
+        with Image(blob=self.o_size.file) as image:
+            image.format = 'jpeg'
+            image.compression_quality = 90
+            file_name = ''.join(self.o_size.name.split('.')[:-1])
             io_stream = BytesIO()
             if size == 'o':
                 shape = image.size
@@ -103,14 +116,14 @@ class PhotoInfo(models.Model):
         for size_type in sizes:
             size = getattr(self.photo, '{0}_size'.format(size_type))
             subprocess.run(['exiftool', "-overwrite_original", '-TagsFromFile',
-                            self.photo.original.path, size.path],
+                            self.photo.temp_original, size.path],
                            stdout=subprocess.PIPE)
 
-        with Image(blob=self.photo.o_size.file) as image:
+        with Image(filename=self.photo.temp_original) as image:
             self.width, self.height = image.size
 
         result = subprocess.run(['exiftool', '-dateTimeOriginal',
-                                self.photo.original.path],
+                                self.photo.temp_original],
                                 stdout=subprocess.PIPE)
 
         result = result.stdout.decode('utf-8')

@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'web',
     'photo_load',
     'face_recognition',
+    'cloud_api',
 ]
 
 MIDDLEWARE = [

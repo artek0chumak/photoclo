@@ -1,3 +1,7 @@
+import os
+
+from cloud_api.async_upload_file import upload_file
+from django.conf import settings
 from face_recognition.async_fd_runner import get_faces
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -57,10 +61,21 @@ class PhotoView(viewsets.GenericViewSet):
     def create(self, request, pk=None):
         data = request.data
         status_list = []
-        for item in request.data.getlist('items[]'):
-            data['original'] = item
+        for item in request.data.getlist('images[]'):
+            path_dir = os.path.join(settings.MEDIA_ROOT, 'temp',
+                                    str(request.user.id))
+            if not os.path.exists(path_dir):
+                os.makedirs(path_dir,)
+            path_temp_file = os.path.join(path_dir, item.name)
+            cloud_path_file = os.path.join('photoclo', item.name)
+            with open(path_temp_file, 'wb') as file:
+                item.seek(0)
+                file.write(item.read())
+
+            data['temp_original'] = path_temp_file
+            data['cloud_original'] = cloud_path_file
             data['owner'] = request.user.id
-            data['user'] = request.user
+            data['filename'] = item.name
 
             photo_serializer = PhotoSerializer(data=data)
 
@@ -68,8 +83,10 @@ class PhotoView(viewsets.GenericViewSet):
                 photo = photo_serializer.create(validated_data=data)
                 get_faces.apply_async((photo.id, request.user.id),
                                       countdown=2)
+                upload_file.apply_async((photo.id,), countdown=5)
                 status_list.append('Success')
             else:
+                print(photo_serializer.errors)
                 status_list.append('Fail')
         return Response({'status': status_list}, HTTP_201_CREATED)
 

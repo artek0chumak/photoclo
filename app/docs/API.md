@@ -78,3 +78,10 @@
         * HTTP\_CODE: 200 - STATUS: OK, return list of photos.
         * HTTP\_CODE: 204 - STATUS: NO\_CONTENT, nothing to show.
         * Example of return: `{"photos":[{"owner":2,"storage":{"id":2,"original":"/media/54939d45b7fa40f3b6e3f2c539131c2f/image.jpeg"},"width":6016,"height":4000},...]`
+### Yandex Disk
+* /api/token/ - return url for user to add app access to his disk.
+    * GET: nothing
+        * HTTP\_CODE: 200 - STATUS: OK, return url.
+        * Example of return: `{
+    "url": "https://oauth.yandex.ru/authorize?response_type=code&client_id=..."
+}`

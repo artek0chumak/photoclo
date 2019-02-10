@@ -1,3 +1,4 @@
+from cloud_api.views import TokenView, StatusCodeView
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -13,7 +14,8 @@ router = routers.SimpleRouter()
 router.register(r'api/photos', PhotoView, base_name='photos')
 router.register(r'api/faces', FaceView, base_name='faces')
 router.register(r'api/avatars', AvatarView, base_name='avatars')
-
+router.register(r'api/cloud-status', StatusCodeView, base_name='cloud-status')
+router.register(r'api', TokenView, base_name='token')
 
 urlpatterns = [
     path(r'', include(router.urls)),
