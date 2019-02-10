@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 
 import requests
 from cloud_api.async_upload_file import upload_file
@@ -66,10 +67,25 @@ class PhotoView(viewsets.GenericViewSet):
         for item in request.data.getlist('images[]'):
             path_dir = os.path.join(settings.MEDIA_ROOT, 'temp',
                                     str(request.user.id))
+            filename = item.name
             if not os.path.exists(path_dir):
                 os.makedirs(path_dir,)
-            path_temp_file = os.path.join(path_dir, item.name)
-            cloud_path_file = os.path.join('photoclo', item.name)
+            path_temp_file = os.path.join(path_dir, filename)
+            cloud_path_file = os.path.join('photoclo', filename)
+
+            if len(Photo.objects.filter(
+                    cloud_original=os.path.join('photoclo', item.name))) > 0:
+                salt = uuid4().hex[:4]
+                ext = '.' + filename.split('.')[-1]
+                filename_ = '.'.join(filename.split('.')[:-1]) + salt + ext
+                while len(Photo.objects.filter(
+                        cloud_original=
+                        os.path.join('photoclo', filename_))) > 0:
+                    salt = uuid4().hex[:4]
+                    filename_ = '.'.join(filename.split('.')[:-1]) + salt + ext
+
+                filename = filename_
+
             with open(path_temp_file, 'wb') as file:
                 item.seek(0)
                 file.write(item.read())
@@ -77,7 +93,7 @@ class PhotoView(viewsets.GenericViewSet):
             data['temp_original'] = path_temp_file
             data['cloud_original'] = cloud_path_file
             data['owner'] = request.user.id
-            data['filename'] = item.name
+            data['filename'] = filename
 
             photo_serializer = PhotoSerializer(data=data)
 
