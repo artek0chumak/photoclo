@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from wand.image import Image
 
-sizes = {'z': 1080, 'y': 807, 'x': 604, 'm': 130, 's': 100}
+sizes = {'z': 1080, 'y': 807, 'x': 604, 'm': 320, 's': 100}
 
 
 def get_upload_path(instance, filename):
@@ -25,19 +25,19 @@ def get_upload_path_size_z(instance, filename):
 
 
 def get_upload_path_size_y(instance, filename):
-    return instance.get_upload_path("y_{0}".format(filename))
+    return instance.get_upload_path(filename, 'y')
 
 
 def get_upload_path_size_x(instance, filename):
-    return instance.get_upload_path("x_{0}".format(filename))
+    return instance.get_upload_path(filename, 'x')
 
 
 def get_upload_path_size_m(instance, filename):
-    return instance.get_upload_path("m_{0}".format(filename))
+    return instance.get_upload_path(filename, 'm')
 
 
 def get_upload_path_size_s(instance, filename):
-    return instance.get_upload_path("s_{0}".format(filename))
+    return instance.get_upload_path(filename, 's')
 
 
 class Photo(models.Model):
