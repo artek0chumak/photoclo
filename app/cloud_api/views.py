@@ -1,4 +1,3 @@
-import base64
 import os
 
 import requests
@@ -43,21 +42,18 @@ class TokenView(ViewSet):
                              error_description}, status=HTTP_400_BAD_REQUEST)
             # Not sure about HTTP code for this request.
 
-        basic = base64.b64encode(
-            '{0}:{1}'.format(ya_disk_client['client-id'],
-                             ya_disk_client['client-secret']).encode('ascii'))
         r = requests.post('https://oauth.yandex.ru/token',
                           {'grant_type': 'authorization_code',
-                           'code': code},
-                          headers={'Authorization': 'Basic {0}'.format(basic)})
+                           'code': code,
+                           'client-id': ya_disk_client['client-id'],
+                           'client-secret': ya_disk_client['client-secret']})
 
         data = r.json()
         if data.get('token', None) is None:
             Response(data, status=HTTP_400_BAD_REQUEST)
-        valid_data = {'user': request.user, 'token': data['access_token'],
-                      'expires_in': data['expires_in']
-                      if data['expires_in'] != 'infinity' else None}
-        user_token = YAtokens.objects.create(valid_data)
+        user_token = YAtokens.objects.create(user=request.user,
+                                             token=data['access_token'],
+                                             expires_in=data['expires_in'])
         user_token.save()
         return Response({}, status=HTTP_201_CREATED)
 
