@@ -2,9 +2,9 @@
 ### Photos sizes
 | type | max size |
 |------|----------|
-| s    | 100px    | - Not implemented
-| m    | 130px    | - Not implemented
-| x    | 640px    | - Not implemented
-| y    | 807px    | - Not implemented
+| s    | 100px    |
+| m    | 130px    |
+| x    | 640px    |
+| y    | 807px    |
 | z    | 1080px   |
 | o    | original |
