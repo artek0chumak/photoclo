@@ -27,6 +27,9 @@ with open(os.path.join(settings.BASE_DIR, 'configs', 'ya_disk_config.yaml'))\
 class TokenView(ViewSet):
     @action(methods=['GET'], detail=False, url_path='code')
     def get_access_code(self, request, pk=None):
+        tokens = YAtokens.objects.filter(user=request.user)
+        if len(tokens) > 0:
+            return Response(status=HTTP_200_OK)
         url = 'https://oauth.yandex.ru/authorize?response_type=code' \
               '&client_id={0}'.format(ya_disk_client['client-id'])
         return Response({'url': url}, status=HTTP_200_OK)
@@ -45,8 +48,8 @@ class TokenView(ViewSet):
         r = requests.post('https://oauth.yandex.ru/token',
                           {'grant_type': 'authorization_code',
                            'code': code,
-                           'client-id': ya_disk_client['client-id'],
-                           'client-secret': ya_disk_client['client-secret']})
+                           'client_id': ya_disk_client['client-id'],
+                           'client_secret': ya_disk_client['client-secret']})
 
         data = r.json()
         if data.get('token', None) is None:

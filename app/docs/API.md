@@ -81,7 +81,9 @@
 ### Yandex Disk
 * /api/tokens/code/ - return url for user to add app access to his disk.
     * GET: nothing
-        * HTTP\_CODE: 200 - STATUS: OK, return url.
+        * HTTP\_CODE: 200 - STATUS: OK, return url. If user gives access, return nothing.
         * Example of return: `{
     "url": "https://oauth.yandex.ru/authorize?response_type=code&client_id=..."
 }`
+* /api/cloud-status/\<id\> - check photo status. \<id\> - photo id
+    

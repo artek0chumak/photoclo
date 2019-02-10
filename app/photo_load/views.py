@@ -1,6 +1,8 @@
 import os
 
+import requests
 from cloud_api.async_upload_file import upload_file
+from cloud_api.models import YAtokens
 from django.conf import settings
 from face_recognition.async_fd_runner import get_faces
 from rest_framework import viewsets
@@ -92,10 +94,14 @@ class PhotoView(viewsets.GenericViewSet):
 
     @action(detail=True, methods=['GET'])
     def download(self, request, pk=None):
-        photo = Photo.objects.filter(owner=request.user).filter(id=pk)
+        photo = Photo.objects.filter(owner=request.user).filter(id=pk).first()
+        token = YAtokens.objects.filter(user=request.user).first()
+        headers = {'Authorization': 'OAuth {0}'.format(token.token)}
 
-        if len(photo) == 0:
-            return Response({}, status=HTTP_404_NOT_FOUND)
+        r = requests.get('https://cloud-api.yandex.net/v1/disk/resources/'
+                         'download', params={'path': photo.cloud_original},
+                         headers=headers)
+        data = r.json()
 
-        return Response({'url': photo[0].original.url}, status=HTTP_200_OK)
+        return Response({'url': data['href']}, status=HTTP_200_OK)
 
