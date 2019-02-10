@@ -26,13 +26,13 @@ with open(os.path.join(settings.BASE_DIR, 'configs', 'ya_disk_config.yaml'))\
 
 
 class TokenView(ViewSet):
-    @action(methods=['GET'], detail=False, url_path='token')
+    @action(methods=['GET'], detail=False, url_path='code')
     def get_access_code(self, request, pk=None):
         url = 'https://oauth.yandex.ru/authorize?response_type=code' \
               '&client_id={0}'.format(ya_disk_client['client-id'])
         return Response({'url': url}, status=HTTP_200_OK)
 
-    @action(methods=['POST'], detail=False, url_path='token')
+    @action(methods=['GET'], detail=False, url_path='token')
     def get_token(self, request, pk=None):
         try:
             code = request.query_params['code']

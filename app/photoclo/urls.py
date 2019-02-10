@@ -15,7 +15,7 @@ router.register(r'api/photos', PhotoView, base_name='photos')
 router.register(r'api/faces', FaceView, base_name='faces')
 router.register(r'api/avatars', AvatarView, base_name='avatars')
 router.register(r'api/cloud-status', StatusCodeView, base_name='cloud-status')
-router.register(r'api', TokenView, base_name='token')
+router.register(r'api/tokens', TokenView, base_name='tokens')
 
 urlpatterns = [
     path(r'', include(router.urls)),
