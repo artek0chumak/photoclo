@@ -2,10 +2,8 @@ import os
 from uuid import uuid4
 
 import requests
-from cloud_api.async_upload_file import upload_file
 from cloud_api.models import YAtokens
 from django.conf import settings
-from face_recognition.async_fd_runner import get_faces
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -100,9 +98,9 @@ class PhotoView(viewsets.GenericViewSet):
 
             if photo_serializer.is_valid():
                 photo = photo_serializer.create(validated_data=data)
-                get_faces.apply_async((photo.id, request.user.id),
-                                      countdown=2)
-                upload_file.apply_async((photo.id,), countdown=5)
+                # get_faces.apply_async((photo.id, request.user.id),
+                #                       countdown=2)
+                # upload_file.apply_async((photo.id,), countdown=5)
                 status_list.append('Success')
             else:
                 status_list.append('Fail')
