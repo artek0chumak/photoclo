@@ -59,7 +59,7 @@ class TokenView(ViewSet):
             # Not sure about HTTP code for this request.
 
         temp_state = TempState.objects.filter(state=state).first()
-        user = temp_state
+        user = temp_state.user
         temp_state.delete()
 
         r = requests.post('https://oauth.yandex.ru/token',
@@ -74,7 +74,7 @@ class TokenView(ViewSet):
                                              token=data['access_token'],
                                              expires_in=data['expires_in'])
         user_token.save()
-        return redirect('')
+        return redirect('http://photoclo.ru:8000')  # Need changes
 
 
 class StatusCodeView(ViewSet):

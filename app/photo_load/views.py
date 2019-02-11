@@ -102,7 +102,8 @@ class PhotoView(viewsets.GenericViewSet):
                 photo = photo_serializer.create(validated_data=data)
                 get_faces.apply_async((photo.id, request.user.id),
                                       countdown=2)
-                upload_file.apply_async((photo.id,), countdown=5)
+                if len(YAtokens.objects.filter(user=request.user)) > 0:
+                    upload_file.apply_async((photo.id,), countdown=5)
                 status_list.append('Success')
             else:
                 status_list.append('Fail')
@@ -112,12 +113,15 @@ class PhotoView(viewsets.GenericViewSet):
     def download(self, request, pk=None):
         photo = Photo.objects.filter(owner=request.user).filter(id=pk).first()
         token = YAtokens.objects.filter(user=request.user).first()
-        headers = {'Authorization': 'OAuth {0}'.format(token.token)}
+        if token:
+            headers = {'Authorization': 'OAuth {0}'.format(token.token)}
 
-        r = requests.get('https://cloud-api.yandex.net/v1/disk/resources/'
-                         'download', params={'path': photo.cloud_original},
-                         headers=headers)
-        data = r.json()
+            r = requests.get('https://cloud-api.yandex.net/v1/disk/resources/'
+                             'download', params={'path': photo.cloud_original},
+                             headers=headers)
+            data = r.json()
+        else:
+            data = {'href': photo.o_size.url}
 
         return Response({'url': data['href']}, status=HTTP_200_OK)
 
