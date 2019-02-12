@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from face_recognition.views import FaceView, AvatarView
-from finder.views import FinderView
+from filter.views import FinderView
 from photo_load.views import PhotoView
 from rest_framework import routers
 from web.views import index
@@ -17,7 +17,7 @@ router.register(r'api/faces', FaceView, base_name='faces')
 router.register(r'api/avatars', AvatarView, base_name='avatars')
 router.register(r'api/cloud-status', StatusCodeView, base_name='cloud-status')
 router.register(r'api/tokens', TokenView, base_name='tokens')
-router.register(r'api/find', FinderView, base_name='find')
+router.register(r'api/filter', FinderView, base_name='filter')
 
 urlpatterns = [
     path(r'', include(router.urls)),
