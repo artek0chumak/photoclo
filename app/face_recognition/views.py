@@ -40,12 +40,14 @@ class FaceView(viewsets.ViewSet):
     def suggest(self, request, pk):
         faces = Face.objects.filter(photo__owner=request.user).filter(photo=pk)
         query = request.query_params('query')
+        face_id = request.query_params('face_id')
 
         if len(faces) == 0:
             return Response(status=HTTP_204_NO_CONTENT)
 
         if len(query) == 0:
-            prob_avatars = ProbAvatar.objects.filter(face__in=faces)
+            prob_avatars = ProbAvatar.objects.filter(face__in=faces)\
+                .filter(face_id=face_id).order_by('place')
             answer = ProbAvatarSerializer(prob_avatars, many=True).data
         else:
             avatars = Avatar.objects.filter(name__icontains=query)
@@ -102,4 +104,3 @@ class AvatarView(viewsets.ViewSet):
             return Response({}, status=HTTP_204_NO_CONTENT)
         return Response({'photos': PhotoSerializer(photos, many=True).data},
                         status=HTTP_200_OK)
-

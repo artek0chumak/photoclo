@@ -70,10 +70,11 @@ class PhotoView(viewsets.GenericViewSet):
                                 headers={'Authorization':
                                          'OAuth {0}'.format(token.token)})
 
+            photo.delete()
+
             if r.status_code != 204:
                 return Response(status=HTTP_500_INTERNAL_SERVER_ERROR)
 
-        photo[0].delete()
         return Response(status=HTTP_200_OK)
 
     def create(self, request, pk=None):
