@@ -37,12 +37,27 @@ def exact_day(field, photos):
         month = fact.month if fact.month else 0
         year = fact.year if fact.year else 0
 
-    if day > 0:
-        photos = photos.filter(photoinfo__time_created__day=day)
-    if month > 0:
-        photos = photos.filter(photoinfo__time_created__month=month)
-    if year > 0:
-        photos = photos.filter(photoinfo__time_created__year=year)
+    if field.find('до') != -1:
+        if day > 0:
+            photos = photos.filter(photoinfo__time_created__day__lte=day)
+        if month > 0:
+            photos = photos.filter(photoinfo__time_created__month__lte=month)
+        if year > 0:
+            photos = photos.filter(photoinfo__time_created__year__lte=year)
+    elif field.find('после') != -1:
+        if day > 0:
+            photos = photos.filter(photoinfo__time_created__day__gte=day)
+        if month > 0:
+            photos = photos.filter(photoinfo__time_created__month__gte=month)
+        if year > 0:
+            photos = photos.filter(photoinfo__time_created__year__gte=year)
+    else:
+        if day > 0:
+            photos = photos.filter(photoinfo__time_created__day=day)
+        if month > 0:
+            photos = photos.filter(photoinfo__time_created__month=month)
+        if year > 0:
+            photos = photos.filter(photoinfo__time_created__year=year)
 
     return photos
 
@@ -56,6 +71,11 @@ def rel_day(field, photos):
 
     date = maya.now().substract(days=days, weeks=weeks, months=months,
                                 years=years)
+
+    if field.find('до') != -1:
+        photos = photos.filter(photoinfo__time_created__lte=date.date)
+    else:
+        photos = photos.filter(photoinfo__time_created__gte=date.date)
 
     return photos
 
