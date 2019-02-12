@@ -14,6 +14,7 @@ from rest_framework.status import (
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR
 )
 
 from .models import Photo, PhotoInfo
@@ -57,6 +58,20 @@ class PhotoView(viewsets.GenericViewSet):
 
         if len(photo) == 0:
             return Response({}, status=HTTP_404_NOT_FOUND)
+
+        token = YAtokens.objects.filter(user=request.user).first()
+        status_file = StatusCode.objects.filter(photo__owner=request.user) \
+            .filter(photo_id=pk).first()
+
+        if status_file is not None and token is not None:
+            r = requests.delete('https://cloud-api.yandex.net/v1/disk/'
+                                'resources',
+                                params={'path': photo[0].cloud_original},
+                                headers={'Authorization':
+                                         'OAuth {0}'.format(token.token)})
+
+            if r.status_code != 204:
+                return Response(status=HTTP_500_INTERNAL_SERVER_ERROR)
 
         photo[0].delete()
         return Response(status=HTTP_200_OK)

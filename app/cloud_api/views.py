@@ -34,7 +34,7 @@ class TokenView(ViewSet):
     def get_access_code(self, request, pk=None):
         tokens = YAtokens.objects.filter(user=request.user)
         if len(tokens) > 0:
-            return Response(status=HTTP_200_OK)
+            return Response({'sync': True}, status=HTTP_200_OK)
         temp_states = TempState.objects.filter(user=request.user)
         if len(temp_states) > 0:
             state = temp_states.first().state
