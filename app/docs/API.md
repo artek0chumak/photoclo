@@ -87,5 +87,9 @@
         * Example of return: `{
     "url": "https://oauth.yandex.ru/authorize?response_type=code&client_id=..."
 }`
+* /api/tokens/status/ - check that user added Yandex Disk access.
+    * GET: nothing
+        * HTTP\_CODE: 200 - STATUS: OK, return `{'sync': True}`
+        * HTTP\_CODE: 204 - STATUS: NO\_CONTENT, return `{'sync': False}`
 * /api/cloud-status/\<id\> - check photo status. \<id\> - photo id
     

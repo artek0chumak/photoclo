@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
+    HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_503_SERVICE_UNAVAILABLE,
@@ -76,6 +77,14 @@ class TokenView(ViewSet):
                                              expires_in=data['expires_in'])
         user_token.save()
         return redirect('http://photoclo.ru:8000')  # Need changes
+
+    @action(methods=['GET'], detail=False, url_path='status')
+    def get_status(self, request, pk=None):
+        tokens = YAtokens.objects.filter(user=request.user)
+        if len(tokens) == 0:
+            return Response({'sync': False}, status=HTTP_204_NO_CONTENT)
+        else:
+            return Response({'sync': True}, status=HTTP_200_OK)
 
 
 class StatusCodeView(ViewSet):
