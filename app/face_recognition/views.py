@@ -11,8 +11,8 @@ from rest_framework.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from .models import Face, Avatar
-from .serializers import FaceSerializer, AvatarSerializer
+from .models import Face, Avatar, ProbAvatar
+from .serializers import FaceSerializer, AvatarSerializer, ProbAvatarSerializer
 
 
 class FaceView(viewsets.ViewSet):
@@ -35,6 +35,23 @@ class FaceView(viewsets.ViewSet):
         face.save()
         return Response({'new_face': FaceSerializer(face).data},
                         status=HTTP_200_OK)
+
+    @action(methods=['GET'], detail=True)
+    def suggest(self, request, pk):
+        faces = Face.objects.filter(photo__owner=request.user).filter(photo=pk)
+        query = request.query_params('query')
+
+        if len(faces) == 0:
+            return Response(status=HTTP_204_NO_CONTENT)
+
+        if len(query) == 0:
+            prob_avatars = ProbAvatar.objects.filter(face__in=faces)
+            answer = ProbAvatarSerializer(prob_avatars, many=True).data
+        else:
+            avatars = Avatar.objects.filter(name__icontains=query)
+            answer = AvatarSerializer(avatars, many=True).data
+
+        return Response({'avatar': answer}, status=HTTP_200_OK)
 
 
 class AvatarView(viewsets.ViewSet):
@@ -85,3 +102,4 @@ class AvatarView(viewsets.ViewSet):
             return Response({}, status=HTTP_204_NO_CONTENT)
         return Response({'photos': PhotoSerializer(photos, many=True).data},
                         status=HTTP_200_OK)
+
