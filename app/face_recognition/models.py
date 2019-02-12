@@ -19,5 +19,6 @@ class Face(models.Model):
 
 class ProbAvatar(models.Model):
     face = models.OneToOneField(Face, on_delete=models.CASCADE)
-    first = models.OneToOneField(Avatar, on_delete=models.CASCADE)
+    avatar = models.OneToOneField(Avatar, on_delete=models.CASCADE)
+    place = models.IntegerField()
 

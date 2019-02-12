@@ -1,7 +1,7 @@
 import numpy as np
 from celery import Celery
 
-from .models import Face, Avatar
+from .models import Face, Avatar, ProbAvatar
 
 app = Celery('tasks', broker='pyamqp://guest@localhost//')
 
@@ -18,13 +18,15 @@ def get_probable_avatars(face_id, user_id):
     probable_avatars = Avatar.objects.filter(photo__owner=user_id).\
         order_by('id')
     probable_emb = probable_avatars.values('embedding')
+    probable_avatars = list(probable_avatars)
 
     probable_emb = np.array(probable_emb)
     probable_dist = np.linalg.norm(probable_emb - embedding_input, axis=1)
-    most_prob_idx = np.argpartition(probable_dist, range(top_avatars_num))
 
-    most_prob_avatars = probable_avatars.filter(id__in=most_prob_idx)
-    return most_prob_avatars
+    for i in np.argpartition(probable_dist, range(top_avatars_num)):
+        avatar = probable_avatars[i]
+        ProbAvatar.objects.create(avatar=avatar, face=face_input, place=i)\
+            .save()
 
 
 def get_avatar_embedding(avatar_id, user_id):
