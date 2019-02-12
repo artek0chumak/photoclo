@@ -25,7 +25,7 @@
         * HTTP\_CODE: 400 - STATUS: error BAD\_REQUEST, no limit, offset or size was sent, return error with description:
             * "Offset is too large" - offset is larger than amount of photos in a server.
             * "" - other errors.
-        * Example of return: `{ data: {count: 10, photos: [{id: 10, urls: /media/.../image1.jpeg, height: 1080, width: 920}, ...]}}`, 
+        * Example of return: `{ data: {count: 10, photos: [{id: 10, urls: /media/.../image1.jpeg, height: 1080, width: 920}, ...]}}`. 
     * POST: photo
         * HTTP\_CODE: 201 - STATUS: OK, return list with status of photos:
             * 'Success' - photo was loaded and saved.
@@ -97,4 +97,10 @@
         * HTTP\_CODE: 200 - STATUS: OK, return `{'sync': True}`
         * HTTP\_CODE: 204 - STATUS: NO\_CONTENT, return `{'sync': False}`
 * /api/cloud-status/\<id\> - check photo status. \<id\> - photo id
+...
+### Filter 
+* /api/filter/ - return photos filtered by query
+    * GET: size in `size` and filter query in `query`
+        * HTTP\_CODE: 200 - STATUS: OK, return photos like /api/photos
+        * Example of return: `{ data: {count: 10, photos: [{id: 10, urls: /media/.../image1.jpeg, height: 1080, width: 920}, ...]}}`.
     
