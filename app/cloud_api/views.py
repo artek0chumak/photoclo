@@ -4,7 +4,7 @@ from uuid import uuid4
 import requests
 from django.conf import settings
 from django.shortcuts import redirect
-from rest_framework.decorators import action, permission_classes
+from rest_framework.decorators import action
 from rest_framework.exceptions import UnsupportedMediaType
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -28,6 +28,8 @@ with open(os.path.join(settings.BASE_DIR, 'configs', 'ya_disk_config.yaml'))\
 
 
 class TokenView(ViewSet):
+    permission_classes = (AllowAny,)
+
     @action(methods=['GET'], detail=False, url_path='code')
     def get_access_code(self, request, pk=None):
         tokens = YAtokens.objects.filter(user=request.user)
@@ -45,7 +47,6 @@ class TokenView(ViewSet):
                                                 state)
         return Response({'url': url}, status=HTTP_200_OK)
 
-    @permission_classes((AllowAny,))
     @action(methods=['GET'], detail=False, url_path='token')
     def get_token(self, request, pk=None):
         try:

@@ -114,8 +114,8 @@ class PhotoView(viewsets.GenericViewSet):
         photo = Photo.objects.filter(owner=request.user).filter(id=pk).first()
         token = YAtokens.objects.filter(user=request.user).first()
         status_file = StatusCode.objects.filter(photo__owner=request.user)\
-            .filter(id=pk).first()
-        if status_file:
+            .filter(photo_id=pk).first()
+        if status_file is not None and token is not None:
             headers = {'Authorization': 'OAuth {0}'.format(token.token)}
 
             r = requests.get('https://cloud-api.yandex.net/v1/disk/resources/'
