@@ -13,8 +13,7 @@ from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-    HTTP_500_INTERNAL_SERVER_ERROR
+    HTTP_404_NOT_FOUND
 )
 
 from .models import Photo, PhotoInfo
@@ -28,13 +27,13 @@ class PhotoView(viewsets.GenericViewSet):
         size = request.query_params['size']
         user = request.user
 
-        photos = PhotoInfo.objects.filter(photo__owner=user)\
-            .order_by('id').values('photo')
+        photos = PhotoInfo.objects.filter(photo__owner=user).values('photo')
 
         if len(photos) < offset:
             return Response({'error': "Offset is too large"},
                             status=HTTP_400_BAD_REQUEST)
-        photos = Photo.objects.filter(id__in=photos)[offset:offset + limit]
+        photos = Photo.objects.filter(id__in=photos).order_by('id')\
+            [offset:offset + limit]
 
         client_photos = [{'url': getattr(photo, '{0}_size'.format(size)).url,
                           'height': photo.photoinfo.height,
@@ -59,21 +58,7 @@ class PhotoView(viewsets.GenericViewSet):
         if len(photo) == 0:
             return Response({}, status=HTTP_404_NOT_FOUND)
 
-        token = YAtokens.objects.filter(user=request.user).first()
-        status_file = StatusCode.objects.filter(photo__owner=request.user) \
-            .filter(photo_id=pk).first()
-
-        if status_file is not None and token is not None:
-            r = requests.delete('https://cloud-api.yandex.net/v1/disk/'
-                                'resources',
-                                params={'path': photo[0].cloud_original},
-                                headers={'Authorization':
-                                         'OAuth {0}'.format(token.token)})
-
-            photo.delete()
-
-            if r.status_code != 204:
-                return Response(status=HTTP_500_INTERNAL_SERVER_ERROR)
+        photo.delete()
 
         return Response(status=HTTP_200_OK)
 

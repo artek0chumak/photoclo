@@ -10,13 +10,12 @@ embedding_size = 128
 
 class Avatar(models.Model):
     name = models.CharField(max_length=100)
-    embedding = JSONField()
 
     @property
-    def get_embedding(self):
+    def embedding(self):
         avatar_embedding = np.zeros(embedding_size)
         total_w = 0
-        for face in self.face_set:
+        for face in self.face_set.all():
             next_embedding = face.embedding
             next_embedding = np.array(next_embedding)
 
@@ -26,10 +25,6 @@ class Avatar(models.Model):
 
         avatar_embedding /= total_w
         return avatar_embedding
-
-    def save(self, *args, **kwargs):
-        self.embedding = self.get_embedding()
-        super(Avatar, self).save(*args, **kwargs)
 
 
 class Face(models.Model):
@@ -41,6 +36,6 @@ class Face(models.Model):
 
 
 class ProbAvatar(models.Model):
-    face = models.OneToOneField(Face, on_delete=models.CASCADE)
-    avatar = models.OneToOneField(Avatar, on_delete=models.CASCADE)
+    face = models.ForeignKey(Face, on_delete=models.CASCADE)
+    avatar = models.ForeignKey(Avatar, on_delete=models.CASCADE)
     place = models.IntegerField()

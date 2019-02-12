@@ -1,6 +1,7 @@
 import numpy as np
 from celery import Celery
 
+from .async_find_probable_avatars import get_probable_avatars
 from .models import Face, Avatar
 
 app = Celery('tasks', broker='pyamqp://guest@localhost//')
@@ -32,9 +33,11 @@ def get_identity(face_id, user_id):
             avatar_dist = norm
 
     if avatar_dist < threshold:
-        return save_avatar(face_id, avatar_id)
+        save_avatar(face_id, avatar_id)
     else:
-        return create_new_avatar(face_id)
+        create_new_avatar(face_id)
+
+    get_probable_avatars(face_id, user_id)
 
 
 def create_new_avatar(face_id):
