@@ -34,8 +34,9 @@ def upload_file(photo_id, status_code=None):
         url = data['href']
         r = requests.put(url, data=file.read())
 
-    if r.status_code in (200, 202):
+    if r.status_code in (200, 202, 201):
         status_code.is_loaded = True
+        status_code.remove_file()
     else:
         status_code.is_error = True
         status_code.error_description = \

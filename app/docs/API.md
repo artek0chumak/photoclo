@@ -41,8 +41,10 @@
         * HTTP\_CODE: 404 - STATUS: error NOT\_FOUND, there is no photo with this id.
 * /api/photos/\<id\>/download/ - download photos by id.
     * GET: nothing
-        * HTTP\_CODE: 200 - STATUS: OK, return url to download original.
+        * HTTP\_CODE: 200 - STATUS: OK, return url to download original and type('Yandex' or 'Photoclo').
         * HTTP\_CODE: 404 - STATUS: error NOT\_FOUND, there is no photo with this id.
+        * Example of  return: `{'url': 'https://downloader.dst.yandex.ru/disk/...',
+        'type': 'Yandex''}`
 ### Faces and avatars:
 * For all urls:
     * HTTP\_CODE: 401 - error UNAUTHORIZED - user in not authorized.

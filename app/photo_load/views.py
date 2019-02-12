@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import requests
 from cloud_api.async_upload_file import upload_file
-from cloud_api.models import YAtokens
+from cloud_api.models import YAtokens, StatusCode
 from django.conf import settings
 from face_recognition.async_fd_runner import get_faces
 from rest_framework import viewsets
@@ -28,7 +28,7 @@ class PhotoView(viewsets.GenericViewSet):
         user = request.user
 
         photos = PhotoInfo.objects.filter(photo__owner=user)\
-            .order_by('-time_created').values('photo')
+            .order_by('id').values('photo')
 
         if len(photos) < offset:
             return Response({'error': "Offset is too large"},
@@ -113,15 +113,19 @@ class PhotoView(viewsets.GenericViewSet):
     def download(self, request, pk=None):
         photo = Photo.objects.filter(owner=request.user).filter(id=pk).first()
         token = YAtokens.objects.filter(user=request.user).first()
-        if token:
+        status_file = StatusCode.objects.filter(photo__owner=request.user)\
+            .filter(id=pk).first()
+        if status_file:
             headers = {'Authorization': 'OAuth {0}'.format(token.token)}
 
             r = requests.get('https://cloud-api.yandex.net/v1/disk/resources/'
                              'download', params={'path': photo.cloud_original},
                              headers=headers)
             data = r.json()
+            data['type'] = 'Yandex'
         else:
-            data = {'href': photo.o_size.url}
+            data = {'href': photo.o_size.url, 'type': 'Photoclo'}
 
-        return Response({'url': data['href']}, status=HTTP_200_OK)
+        return Response({'url': data['href'], 'type': data['type']},
+                        status=HTTP_200_OK)
 

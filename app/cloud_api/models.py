@@ -21,10 +21,8 @@ class StatusCode(models.Model):
     is_error = models.NullBooleanField()
     error_description = models.CharField(max_length=200, null=True)
 
-    def delete(self, using=None, keep_parents=False):
+    def remove_file(self):
         os.remove(self.temp_path)
-        return super(StatusCode, self).delete(using=using,
-                                              keep_parents=keep_parents)
 
 
 class TempState(models.Model):
