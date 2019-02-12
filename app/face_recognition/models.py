@@ -6,6 +6,7 @@ from photo_load.models import Photo
 
 class Avatar(models.Model):
     name = models.CharField(max_length=100)
+    embedding = JSONField()
 
 
 class Face(models.Model):
@@ -14,4 +15,10 @@ class Face(models.Model):
     embedding = JSONField()
     bounding_box = JSONField()
     user_checked = models.BooleanField(default=False)
+
+
+class ProbAvatar(models.Model):
+    face = models.OneToOneField(Face, on_delete=models.CASCADE)
+    avatar = models.OneToOneField(Avatar, on_delete=models.CASCADE)
+    place = models.IntegerField()
 

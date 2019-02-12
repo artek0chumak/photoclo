@@ -59,6 +59,11 @@
         * HTTP\_CODE: 404 - STATUS: error NOT\_FOUND, face with this id wasn't found.
         * Example of request: `{ "face": 1, "new_avatar": 4}`, `face` - face id, `new_avatar` - avatar id.
         * Example of return: `{ "new_face": {"id": 1, "avatar": 4, "photo": 15, "embedding": [0.9124, 0.1982, ..., 0.5233]}, "bounding_box": [131, 168, 343, 438], "user_checked": False }}`
+* /api/faces/\<id\>/suggest/ - return suggestion avatars for faces in photo. \<id\> - photo id.
+    * GET: `query` - string by user. It can be empty.
+        * HTTP\_CODE: 200 - STATUS: OK, return probable avatars, if query was empty, or avatars contains query in name
+        * Example of return: after empty query `{'avatars': [{'face': 2, 'avatar': 5, 'avatar_name': Mama, 'place': 1},...]}`, place is confidence of photo own to avatar: 1 - the most, 5 - the less.
+        * Example of return: after nonempty query `{'avatars': [{'id': 5, 'name': Father},...]}`
 * /api/avatars/ - create avatar or return list of avatars
     * GET: nothing
         * HTTP\_CODE: 200 - STATUS: OK, return avatars in `avatars`.
