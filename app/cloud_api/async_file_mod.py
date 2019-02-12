@@ -45,3 +45,10 @@ def upload_file(photo_id, status_code=None):
     status_code.save()
 
     return r.status_code
+
+
+@app.task
+def delete_file(cloud_path, token):
+    requests.delete('https://cloud-api.yandex.net/v1/disk/resources',
+                    params={'path': cloud_path},
+                    headers={'Authorization': 'OAuth {0}'.format(token)})

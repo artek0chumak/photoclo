@@ -19,7 +19,7 @@ from rest_framework.status import (
 from rest_framework.viewsets import ViewSet
 from yaml import load
 
-from .async_upload_file import upload_file
+from .async_file_mod import upload_file
 from .models import YAtokens, StatusCode, TempState
 from .serializers import StatusCodeSerializer
 

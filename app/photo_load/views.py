@@ -2,7 +2,7 @@ import os
 from uuid import uuid4
 
 import requests
-from cloud_api.async_upload_file import upload_file
+from cloud_api.async_file_mod import upload_file, delete_file
 from cloud_api.models import YAtokens, StatusCode
 from django.conf import settings
 from face_recognition.async_fd_runner import get_faces
@@ -32,7 +32,7 @@ class PhotoView(viewsets.GenericViewSet):
         if len(photos) < offset:
             return Response({'error': "Offset is too large"},
                             status=HTTP_400_BAD_REQUEST)
-        photos = Photo.objects.filter(id__in=photos).order_by('id')\
+        photos = Photo.objects.filter(id__in=photos).order_by('-id')\
             [offset:offset + limit]
 
         client_photos = [{'url': getattr(photo, '{0}_size'.format(size)).url,
@@ -58,6 +58,13 @@ class PhotoView(viewsets.GenericViewSet):
         if len(photo) == 0:
             return Response({}, status=HTTP_404_NOT_FOUND)
 
+        token = YAtokens.objects.filter(user=request.user).first()
+        status_file = StatusCode.objects.filter(photo__owner=request.user) \
+            .filter(photo_id=pk).first()
+        
+        if status_file is not None and token is not None:
+            delete_file.apply_async((photo[0].cloud_original, token.token),
+                                    countdown=5)
         photo.delete()
 
         return Response(status=HTTP_200_OK)
