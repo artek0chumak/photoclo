@@ -9,7 +9,7 @@ embedding_size = 128
 
 
 class Avatar(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, null=True)
 
     @property
     def embedding(self):

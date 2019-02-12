@@ -46,7 +46,7 @@ class FaceView(viewsets.ViewSet):
 
         if len(query) == 0:
             prob_avatars = ProbAvatar.objects.filter(face__in=faces)\
-                .order_by('place')
+                .filter(face__avatar__name__isnull=False).order_by('place')
             answer = ProbAvatarSerializer(prob_avatars, many=True).data
         else:
             avatars = Avatar.objects.filter(name__icontains=query)

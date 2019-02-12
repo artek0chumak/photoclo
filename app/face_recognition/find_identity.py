@@ -42,7 +42,7 @@ def get_identity(face_id, user_id):
 
 def create_new_avatar(face_id):
     avatar = Avatar.objects.create()
-    avatar.name = 'New Avatar'
+    avatar.name = None
     avatar.save()
     face = Face.objects.filter(id=face_id).first()
     face.avatar = avatar
