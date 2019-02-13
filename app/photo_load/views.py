@@ -1,4 +1,5 @@
 import os
+import subprocess
 from uuid import uuid4
 
 import requests
@@ -98,6 +99,8 @@ class PhotoView(viewsets.GenericViewSet):
             with open(path_temp_file, 'wb') as file:
                 item.seek(0)
                 file.write(item.read())
+                subprocess.run(['exiftran', '-ai', path_temp_file],
+                               stdout=subprocess.PIPE)
 
             data['temp_original'] = path_temp_file
             data['cloud_original'] = cloud_path_file

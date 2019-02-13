@@ -118,7 +118,7 @@ class PhotoInfo(models.Model):
                             self.photo.temp_original, size.path],
                            stdout=subprocess.PIPE)
 
-        with Image(filename=self.photo.temp_original) as image:
+        with Image(blob=self.photo.o_size.file) as image:
             self.width, self.height = image.size
 
         result = subprocess.run(['exiftool', '-dateTimeOriginal',
