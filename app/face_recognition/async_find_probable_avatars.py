@@ -23,19 +23,20 @@ def get_probable_avatars(user_id):
 
         probable_emb = np.array([prb_avatar.embedding for prb_avatar in
                                  probable_avatars])
-        probable_dist = np.linalg.norm(probable_emb - embedding_input, axis=1)
+        if len(probable_emb) > 0:
+            probable_dist = np.linalg.norm(probable_emb - embedding_input,
+                                           axis=1)
 
-        ProbAvatar.objects.filter(face=face_input).delete()
-        probable_avatars_top = np.argpartition(probable_dist,
-                                               range(top_avatars_num))[
-            :top_avatars_num]
+            probable_avatars_top = np.argpartition(probable_dist,
+                                                   range(top_avatars_num))[
+                :top_avatars_num]
 
-        j = 0
-        for i in probable_avatars_top:
-            j += 1
-            avatar = probable_avatars[i]
-            print('{} {} {}'.format(avatar, face_input, j))
-            if len(ProbAvatar.objects.filter(face=face_input,
-                                             avatar=avatar)) == 0:
-                ProbAvatar.objects.create(avatar=avatar, face=face_input,
-                                          place=j).save()
+            j = 0
+            for i in probable_avatars_top:
+                j += 1
+                avatar = probable_avatars[i]
+                print('{} {} {}'.format(avatar, face_input, j))
+                if len(ProbAvatar.objects.filter(face=face_input,
+                                                 avatar=avatar)) == 0:
+                    ProbAvatar.objects.create(avatar=avatar, face=face_input,
+                                              place=j).save()

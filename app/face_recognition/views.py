@@ -93,7 +93,7 @@ class AvatarView(viewsets.ViewSet):
             return Response({'updated face': FaceSerializer(face).data},
                             HTTP_200_OK)
 
-        avatar = avatars.filter(id=pk).first()
+        avatar = avatars.filter(id=pk)
 
         if len(avatar) == 0:
             return Response({}, status=HTTP_404_NOT_FOUND)
