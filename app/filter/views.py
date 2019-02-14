@@ -20,6 +20,7 @@ natasha_extractor = DatesExtractor()
 
 def exact_day(field, photos):
     day, month, year = 0, 0, 0
+    now = maya.now()
 
     result = natasha_extractor(field)
     if len(result) == 0:
@@ -29,13 +30,18 @@ def exact_day(field, photos):
             month, year = map(int, re.findall(r'[\d]+', field))
         elif full_date_regexp.match(field):
             day, month, year = map(int, re.findall(r'[\d]+', field))
+        elif field.find('сегодня') != -1:
+            return photos.filter(photoinfo__time_created__date=now.date)
+        elif field.find('вчера') != -1:
+            now = now.subtract(days=1)
+            return photos.filter(photoinfo__time_created__date=now.date)
         else:
-            photos = photos.filter(face__avatar__name=field.strip)
-    else:
-        fact = result[0].fact
-        day = fact.day if fact.day else 0
-        month = fact.month if fact.month else 0
-        year = fact.year if fact.year else 0
+            return photos.filter(face__avatar__name=field.strip)
+
+    fact = result[0].fact
+    day = fact.day if fact.day else 0
+    month = fact.month if fact.month else 0
+    year = fact.year if fact.year else 0
 
     if field.find('до') != -1:
         if day > 0:
@@ -86,7 +92,7 @@ class FinderView(ViewSet):
         size = request.query_params['size']
         photos = Photo.objects.filter(owner=request.user)
 
-        if len(list(rel_date_parser.findall(field))) == 0:
+        if len(list(rel_date_parser.findall(field))) != 0:
             photos = rel_day(field, photos)
         else:
             photos = exact_day(field, photos)
