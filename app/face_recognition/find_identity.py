@@ -37,7 +37,7 @@ def get_identity(face_id, user_id):
     else:
         create_new_avatar(face_id)
 
-    get_probable_avatars(face_id, user_id)
+    get_probable_avatars(user_id)
 
 
 def create_new_avatar(face_id):

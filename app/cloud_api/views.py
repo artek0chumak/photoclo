@@ -4,8 +4,8 @@ from uuid import uuid4
 import requests
 from django.conf import settings
 from django.shortcuts import redirect
+from django.utils.datastructures import MultiValueDictKeyError
 from rest_framework.decorators import action
-from rest_framework.exceptions import UnsupportedMediaType
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import (
@@ -53,11 +53,8 @@ class TokenView(ViewSet):
         try:
             code = request.query_params['code']
             state = request.query_params['state']
-        except UnsupportedMediaType as e:
-            error = request.query_params['error']
-            error_description = request.query_params['error_description']
-            return Response({'error': error, 'error_description':
-                             error_description}, status=HTTP_400_BAD_REQUEST)
+        except MultiValueDictKeyError as e:
+            return redirect('http://photoclo.ru:8000')
             # Not sure about HTTP code for this request.
 
         temp_state = TempState.objects.filter(state=state).first()

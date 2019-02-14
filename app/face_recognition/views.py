@@ -11,6 +11,7 @@ from rest_framework.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
+from .async_find_probable_avatars import get_probable_avatars
 from .models import Face, Avatar, ProbAvatar
 from .serializers import FaceSerializer, AvatarSerializer, ProbAvatarSerializer
 
@@ -74,24 +75,39 @@ class AvatarView(viewsets.ViewSet):
 
         if avatar_serializer.is_valid():
             avatar_serializer.save()
+            get_probable_avatars.apply_async((request.user.id,))
             return Response(avatar_serializer.data, status=HTTP_201_CREATED)
         else:
             return Response({}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
     def partial_update(self, request, pk):
-        avatar = Avatar.objects.filter(face__photo__owner=request.user).\
-            filter(id=pk)
+        avatars = Avatar.objects.filter(face__photo__owner=request.user)
+        new_name = request.data['new_name']
+        if len(avatars.filter(name=new_name)) > 0:
+            face = Face.objects.filter(photo__owner=request.user)\
+                .filter(id=request.data['face']).first()
+            face.avatar = avatars.filter(name=new_name).first()
+            face.user_checked = True
+            face.save()
+
+            return Response({'updated face': FaceSerializer(face).data},
+                            HTTP_200_OK)
+
+        avatar = avatars.filter(id=pk).first()
+
         if len(avatar) == 0:
             return Response({}, status=HTTP_404_NOT_FOUND)
         avatar = avatar.first()
 
-        new_name = request.data['new_name']
         avatar.name = new_name
         avatar.save()
         face = Face.objects.filter(photo__owner=request.user)\
             .filter(id=request.data['face']).first()
         face.user_checked = True
         face.save()
+
+        get_probable_avatars.apply_async((request.user.id,))
+
         return Response({'updated_avatar': AvatarSerializer(avatar).data},
                         status=HTTP_200_OK)
 

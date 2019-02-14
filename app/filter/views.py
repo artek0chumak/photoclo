@@ -64,12 +64,12 @@ def exact_day(field, photos):
 
 def rel_day(field, photos):
     result = next(rel_date_parser.findall(field)).fact
-    days = result.relDay if result.relDay else 0
-    weeks = result.relWeek if result.relWeek else 0
-    months = result.relMonth if result.relMonth else 0
-    years = result.relYear if result.relYear else 0
+    days = int(result.relDay) if result.relDay else 0
+    weeks = int(result.relWeek) if result.relWeek else 0
+    months = int(result.relMonth) if result.relMonth else 0
+    years = int(result.relYear) if result.relYear else 0
 
-    date = maya.now().substract(days=days, weeks=weeks, months=months,
+    date = maya.now().subtract(days=days, weeks=weeks, months=months,
                                 years=years)
 
     if field.find('до') != -1:
@@ -86,7 +86,7 @@ class FinderView(ViewSet):
         size = request.query_params['size']
         photos = Photo.objects.filter(owner=request.user)
 
-        if len(rel_date_parser.findall(field)) == 0:
+        if len(list(rel_date_parser.findall(field))) == 0:
             photos = rel_day(field, photos)
         else:
             photos = exact_day(field, photos)
@@ -97,6 +97,6 @@ class FinderView(ViewSet):
         client_photos = [{'url': getattr(photo, '{0}_size'.format(size)).url,
                           'height': photo.photoinfo.height,
                           'width': photo.photoinfo.width,
-                          'id': photo.id} for photo in photos]
+                          'id': photo.id} for photo in photos.order_by('id')]
 
         return Response({'photos': client_photos}, status=HTTP_200_OK)
